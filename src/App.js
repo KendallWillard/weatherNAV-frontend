@@ -7,9 +7,10 @@ class App extends Component {
   render() {
     return (
       <div className="App">
+        <h1>weatherNAV</h1>
     <Map
      google={this.props.google}
-     center={{lat: 18.5204, lng: 73.8567}}
+     center={{lat: 39.7392, lng: -104.9903}}
      height='300px'
      zoom={15}
     />

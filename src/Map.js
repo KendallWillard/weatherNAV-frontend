@@ -1,8 +1,10 @@
 import React from 'react'
-import { withGoogleMap, GoogleMap, withScriptjs, InfoWindow, Marker } from "react-google-maps";
+import { withGoogleMap, GoogleMap, withScriptjs, InfoWindow, Marker, Polyline, DirectionsService } from "react-google-maps";
 import Autocomplete from 'react-google-autocomplete';
 import Geocode from "react-geocode";
-Geocode.setApiKey("");
+import apiConfig from '../apiKeys'
+
+Geocode.setApiKey(apiConfig.googleMap);
 // import Search from './Search'
 
 Geocode.enableDebug();
@@ -14,6 +16,7 @@ constructor( props ){
    city: '',
    area: '',
    state: '',
+   destCity: '',
    mapPosition: {
     lat: this.props.center.lat,
     lng: this.props.center.lng
@@ -25,17 +28,17 @@ constructor( props ){
     destinationMarker: {
         lat: 36.6448,
         lng: -93.2244
-    } 
+    }
   }
  }
 /**
   * Get the current address from the default map position and set those values in the state
   */
  componentDidMount() {
-  Geocode.fromLatLng( this.state.mapPosition.lat , this.state.mapPosition.lng ).then(
-   response => {
+  Geocode.fromLatLng( this.state.mapPosition.lat , this.state.mapPosition.lng )
+  .then(response => {
     const address = response.results[0].formatted_address,
-     addressArray =  response.results[0].address_components,
+      addressArray =  response.results[0].address_components,
      city = this.getCity( addressArray ),
      area = this.getArea( addressArray ),
      state = this.getState( addressArray );
@@ -187,7 +190,39 @@ const address = place.formatted_address,
      lng: lngValue
     }
    })
+   this.calculateAndDisplayRoute();
   };
+
+  calculateAndDisplayRoute = () => {
+  Geocode.fromLatLng( this.state.destinationMarker.lat , this.state.destinationMarker.lng )
+  .then(response => {
+    const addressArray =  response.results[0].address_components,
+     city = this.getCity( addressArray );
+    console.log( 'city', city);
+    this.setState( {
+     destCity: ( city ) ? city : '',
+    } )
+   },
+   error => {console.error(error);}
+  );
+  const directionsService = new window.google.maps.DirectionsService()
+    directionsService.route({   
+      origin: {lat: this.state.markerPosition.lat, lng: this.state.markerPosition.lng},
+      destination: {lat: this.state.destinationMarker.lat, lng: this.state.destinationMarker.lng},   
+      travelMode: 'DRIVING',   
+     },  
+       (result, status) => {   
+         if (status === 'OK') {   
+           const overViewCoords = result.routes[0].overview_path;   
+           console.log(overViewCoords)
+             this.setState({   
+               lineCoordinates: overViewCoords,
+             });
+         } else {
+            console.warn(`error fetching directions ${status}`);
+         }
+       });
+  }
  
 /**
   * When the marker is dragged you get the lat and long using the functions available from event object.
@@ -219,6 +254,7 @@ this.setState( {
    }
   );
  };
+
 render(){
 const AsyncMap = withScriptjs(
    withGoogleMap(
@@ -287,6 +323,15 @@ const AsyncMap = withScriptjs(
         <span style={{ padding: 0, margin: 0 }}>{ this.state.address }</span>
        </div>
       </InfoWindow> */}
+ <Polyline
+  path={this.state.lineCoordinates}
+  geodesic={false}
+  options={{
+    strokeColor: '#38B44F',
+    strokeOpacity: 1,
+    strokeWeight: 7,
+  }}
+/>
 </GoogleMap>
 )
    )
@@ -296,24 +341,24 @@ let map;
    map = <div>
      <div>
       <div className="form-group">
-       <label htmlFor="">City</label>
+       <label htmlFor="">Start City</label>
        <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.city }/>
       </div>
       <div className="form-group">
-       <label htmlFor="">Area</label>
+       <label htmlFor="">Start Area</label>
        <input type="text" name="area" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.area }/>
       </div>
       <div className="form-group">
-       <label htmlFor="">State</label>
+       <label htmlFor="">Start State</label>
        <input type="text" name="state" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.state }/>
       </div>
       <div className="form-group">
-       <label htmlFor="">Address</label>
+       <label htmlFor="">Start Address</label>
        <input type="text" name="address" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
       </div>
      </div>
      <AsyncMap
-      googleMapURL="https://maps.googleapis.com/maps/api/js?key=&libraries=places"
+      googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiConfig.googleMap}&libraries=places`}
       loadingElement={
        <div style={{ height: `100%` }} />
       }
@@ -324,6 +369,7 @@ let map;
        <div style={{ height: `100%` }} />
       }
      />
+     <button onClick={this.calculateAndDisplayRoute}>Draw Route</button>
     </div>
 } else {
    map = <div style={{height: this.props.height}} />
