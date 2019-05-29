@@ -4,6 +4,7 @@ import Autocomplete from 'react-google-autocomplete';
 import Geocode from "react-geocode";
 import apiConfig from '../apiKeys'
 
+
 Geocode.setApiKey(apiConfig.googleMap);
 // import Search from './Search'
 
@@ -17,6 +18,7 @@ constructor( props ){
    area: '',
    state: '',
    destCity: '',
+   destAddress: '',
    mapPosition: {
     lat: this.props.center.lat,
     lng: this.props.center.lng
@@ -172,19 +174,15 @@ const address = place.formatted_address,
  };
 
  onDestinationSelected = ( place ) => {
-    const address = place.formatted_address,
+  const address = place.formatted_address,
     addressArray =  place.address_components,
     city = this.getCity( addressArray ),
-    area = this.getArea( addressArray ),
-    state = this.getState( addressArray ),
     latValue = place.geometry.location.lat(),
     lngValue = place.geometry.location.lng();
  // Set these values in the state.
    this.setState({
-    address: ( address ) ? address : '',
-    area: ( area ) ? area : '',
-    city: ( city ) ? city : '',
-    state: ( state ) ? state : '',
+    destCity: ( city ) ? city : '',
+    destAddress: ( address ) ? address : '',
     destinationMarker: {
      lat: latValue,
      lng: lngValue
@@ -198,7 +196,6 @@ const address = place.formatted_address,
   .then(response => {
     const addressArray =  response.results[0].address_components,
      city = this.getCity( addressArray );
-    console.log( 'city', city);
     this.setState( {
      destCity: ( city ) ? city : '',
     } )
@@ -213,15 +210,33 @@ const address = place.formatted_address,
      },  
        (result, status) => {   
          if (status === 'OK') {   
+           console.log(result)
            const overViewCoords = result.routes[0].overview_path;   
-           console.log(overViewCoords)
+           const distanceMatrixDuration = result.routes[0].legs[0].duration.text
+    
              this.setState({   
+               totalTime: distanceMatrixDuration,
                lineCoordinates: overViewCoords,
              });
          } else {
             console.warn(`error fetching directions ${status}`);
          }
        });
+  }
+
+  sendTextMessage = () => {
+    console.log('fired')
+    const messageObj = {
+      description: this.state.destAddress
+    }
+    fetch(`http://localhost:3001/messages`, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(messageObj)
+    })
+    .catch(error => console.error(error))
   }
  
 /**
@@ -340,36 +355,33 @@ let map;
   if( this.props.center.lat !== undefined ) {
    map = <div>
      <div>
-      <div className="form-group">
-       <label htmlFor="">Start City</label>
-       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.city }/>
+     <div className="form-group">
+       <label htmlFor="">Trip Time: </label>
+       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.totalTime }/>
       </div>
       <div className="form-group">
-       <label htmlFor="">Start Area</label>
-       <input type="text" name="area" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.area }/>
+       <label htmlFor="">Start Location</label>
+       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
       </div>
       <div className="form-group">
-       <label htmlFor="">Start State</label>
-       <input type="text" name="state" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.state }/>
+       <label htmlFor="">End Location</label>
+       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.destAddress }/>
       </div>
-      <div className="form-group">
-       <label htmlFor="">Start Address</label>
-       <input type="text" name="address" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
-      </div>
+      <button onClick={this.sendTextMessage}>Send Text Message</button>
      </div>
      <AsyncMap
       googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiConfig.googleMap}&libraries=places`}
       loadingElement={
-       <div style={{ height: `100%` }} />
+       <div style={{ height: '100%' }} />
       }
       containerElement={
        <div style={{ height: this.props.height }} />
       }
       mapElement={
-       <div style={{ height: `100%` }} />
+       <div style={{ height: '575px' }} />
       }
      />
-     <button onClick={this.calculateAndDisplayRoute}>Draw Route</button>
+
     </div>
 } else {
    map = <div style={{height: this.props.height}} />
