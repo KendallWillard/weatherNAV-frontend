@@ -2,8 +2,8 @@ import React from 'react'
 import { withGoogleMap, GoogleMap, withScriptjs, InfoWindow, Marker, Polyline, DirectionsService } from "react-google-maps";
 import Autocomplete from 'react-google-autocomplete';
 import Geocode from "react-geocode";
-import apiConfig from '../apiKeys'
-
+import apiConfig from '../../../apiKeys'
+import WeatherApi from '../Weather/WeatherApi'
 
 Geocode.setApiKey(apiConfig.googleMap);
 // import Search from './Search'
@@ -186,23 +186,24 @@ const address = place.formatted_address,
     destinationMarker: {
      lat: latValue,
      lng: lngValue
-    }
+    },
+    
    })
    this.calculateAndDisplayRoute();
   };
 
   calculateAndDisplayRoute = () => {
-  Geocode.fromLatLng( this.state.destinationMarker.lat , this.state.destinationMarker.lng )
-  .then(response => {
-    const addressArray =  response.results[0].address_components,
-     city = this.getCity( addressArray );
-    this.setState( {
-     destCity: ( city ) ? city : '',
-    } )
-   },
-   error => {console.error(error);}
-  );
-  const directionsService = new window.google.maps.DirectionsService()
+    Geocode.fromLatLng( this.state.destinationMarker.lat , this.state.destinationMarker.lng )
+    .then(response => {
+      const addressArray =  response.results[0].address_components,
+      city = this.getCity( addressArray );
+      this.setState( {
+      destCity: ( city ) ? city : '',
+      } )
+    },
+    error => {console.error(error);}
+    );
+    const directionsService = new window.google.maps.DirectionsService()
     directionsService.route({   
       origin: {lat: this.state.markerPosition.lat, lng: this.state.markerPosition.lng},
       destination: {lat: this.state.destinationMarker.lat, lng: this.state.destinationMarker.lng},   
@@ -210,34 +211,20 @@ const address = place.formatted_address,
      },  
        (result, status) => {   
          if (status === 'OK') {   
-           console.log(result)
-           const overViewCoords = result.routes[0].overview_path;   
-           const distanceMatrixDuration = result.routes[0].legs[0].duration.text
-    
-             this.setState({   
-               totalTime: distanceMatrixDuration,
-               lineCoordinates: overViewCoords,
-             });
-         } else {
+           const overViewCoords = result.routes[0].overview_path,   
+                 distanceMatrixDuration = result.routes[0].legs[0].duration.text;
+           this.setState({   
+            totalTime: distanceMatrixDuration,
+            lineCoordinates: overViewCoords,
+           });
+        } else {
             console.warn(`error fetching directions ${status}`);
          }
        });
   }
 
-  sendTextMessage = () => {
-    console.log('fired')
-    const messageObj = {
-      description: this.state.destAddress
-    }
-    fetch(`http://localhost:3001/messages`, {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(messageObj)
-    })
-    .catch(error => console.error(error))
-  }
+
+
  
 /**
   * When the marker is dragged you get the lat and long using the functions available from event object.
@@ -271,6 +258,7 @@ this.setState( {
  };
 
 render(){
+  
 const AsyncMap = withScriptjs(
    withGoogleMap(
     props => (
@@ -284,7 +272,7 @@ const AsyncMap = withScriptjs(
         width: '100%',
         height: '40px',
         paddingLeft: '16px',
-        marginTop: '50px',
+        marginTop: '15px',
         marginBottom: '25px'
        }}
        placeholder="Enter starting location"
@@ -298,13 +286,20 @@ const AsyncMap = withScriptjs(
         height: '40px',
         paddingLeft: '16px',
         marginTop: '1px',
-        marginBottom: '100px'
+        marginBottom: '10px'
        }}
        placeholder="Enter destination location"
        onPlaceSelected={ this.onDestinationSelected }
        types={[]}
-      />
+      />        
 
+{/* Weather API insertion*/}
+     <WeatherApi 
+        destLat={this.state.destinationMarker.lat}
+        destLon={this.state.destinationMarker.lng}
+        totalTripTime={this.state.totalTime}
+        phone={this.props.phone}
+        />
 
 {/*Marker*/}
       <Marker google={this.props.google}
@@ -348,6 +343,7 @@ const AsyncMap = withScriptjs(
   }}
 />
 </GoogleMap>
+
 )
    )
   );
@@ -357,17 +353,16 @@ let map;
      <div>
      <div className="form-group">
        <label htmlFor="">Trip Time: </label>
-       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.totalTime }/>
+       <input type="text" name="trip" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.totalTime }/>
       </div>
       <div className="form-group">
        <label htmlFor="">Start Location</label>
-       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
+       <input type="text" name="start-location" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
       </div>
       <div className="form-group">
        <label htmlFor="">End Location</label>
-       <input type="text" name="city" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.destAddress }/>
+       <input type="text" name="end-location" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.destAddress }/>
       </div>
-      <button onClick={this.sendTextMessage}>Send Text Message</button>
      </div>
      <AsyncMap
       googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiConfig.googleMap}&libraries=places`}
@@ -378,15 +373,18 @@ let map;
        <div style={{ height: this.props.height }} />
       }
       mapElement={
-       <div style={{ height: '575px' }} />
+       <div style={{ height: '400px' }} />
       }
      />
+
+          
 
     </div>
 } else {
    map = <div style={{height: this.props.height}} />
   }
+  
   return( map )
- }
+  }
 }
 export default Map

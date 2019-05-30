@@ -4,11 +4,14 @@
   "private": true,
   "dependencies": {
     "exec": "^0.2.1",
+    "mdbootstrap": "^4.8.2",
+    "mdbreact": "^4.15.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-geocode": "^0.1.2",
     "react-google-autocomplete": "^1.1.0",
     "react-google-maps": "^9.4.5",
+    "react-router-dom": "^5.0.0",
     "react-scripts": "0.9.5"
   },
   "devDependencies": {},
@@ -20,5 +23,5 @@
   },
   "browser": {
     "child_process": false
-    }  
+  }
 }
