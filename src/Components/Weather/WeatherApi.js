@@ -1,14 +1,15 @@
 import React from 'react'
 import apiConfig from '../../../apiKeys'
 import DisplayWeatherInfo from './DisplayWeatherInfo'
-
+import { MDBBtn } from 'mdbreact';
 
 export default class WeatherApi extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             weather: [],
-            weatherAtDestination: ''
+            weatherAtDestination: '',
+            weatherSum: ''
         }
     }
 
@@ -20,12 +21,20 @@ export default class WeatherApi extends React.Component {
         })
         .then(response => response.json())
         .then(weather => this.setState({weather}))
+        .then(this.parseWeatherInfo())
         .catch(error => console.error(error))
     }
     
     sendTextMessage = () => {
+        console.log(this.state.weather.hourly.summary)
+        let alertMessage;
+        this.state.weather.alerts ? alertMessage = this.state.weather.alerts : alertMessage = "No Alerts/Warnings :)"
         const messageObj = {
-          description: `The weather at your destination will be ${this.state.weatherAtDestination} degrees Fahrenheit`,
+          description: `
+            Summary: ${this.state.weather.hourly.summary}
+Destination Temp: ${this.state.weatherAtDestination} degrees Fahrenheit
+WARNINGS: ${alertMessage}
+          `,
           phone: this.props.phone
         }
         fetch(`http://localhost:3001/messages`, {
@@ -39,32 +48,27 @@ export default class WeatherApi extends React.Component {
       }
 
     parseWeatherInfo = () => {
-        let tripTimeHourOnly = this.props.totalTripTime.split(' ')[0]
-        this.setState({
-            hoursToDestination: tripTimeHourOnly
-        })
+        let tripTimeHourOnly = this.props.totalTripTime.split(' ')[0];
         let newWeather =  ( this.state.weather.hourly.data[tripTimeHourOnly].apparentTemperature )
+        let weatherSummary = this.state.weather.hourly.summary
         this.setState({
-            weatherAtDestination: newWeather
+            weatherAtDestination: newWeather,
+            weatherSum: weatherSummary,
+            hoursToDestination: tripTimeHourOnly
+
         })
-    
     }
-
-
-
-    calculateWeatherAtDestination = () => {
-        this.parseWeatherInfo()
-    }
-
 
     render() {
         return(
             <div>
-                My Weather API <br/>
-                <button onClick={this.fetchWeather}>Fetch Weather</button> <br/>
-                <button onClick={this.calculateWeatherAtDestination}>Calculate Weather</button>
-                <button onClick={this.sendTextMessage}>Send Weather Text</button>
-                <DisplayWeatherInfo futureWeather={this.state.weatherAtDestination} alerts={this.state.weather.alerts}/>
+                <MDBBtn onClick={this.fetchWeather} color="amber">Calculate Weather</MDBBtn>
+                <MDBBtn onClick={this.sendTextMessage} color="cyan">Text Myself Weather Info</MDBBtn>
+                <DisplayWeatherInfo 
+                    futureWeather={this.state.weatherAtDestination} 
+                    alerts={this.state.weather.alerts}
+                    weatherSummary={this.state.weather.hourly}
+                />
             </div>
         )
     }

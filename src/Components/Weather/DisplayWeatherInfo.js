@@ -1,9 +1,11 @@
 import React from 'react'
 
 const DisplayWeatherInfo = props => {
+    console.log(props)
     return(
         <div>
-            <h2>Weather Info: {props.futureWeather}</h2>
+            <h2>Weather Temp: {props.futureWeather} degrees fahrenheit</h2>
+            <h4>Weather Summary: {props.weatherSummary ? props.weatherSummary.summary : null}</h4> 
             <h1>ALERTS/WARNINGS: </h1>
             <ul>
                 { props.alerts ? 

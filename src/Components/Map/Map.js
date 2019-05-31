@@ -1,9 +1,10 @@
 import React from 'react'
-import { withGoogleMap, GoogleMap, withScriptjs, InfoWindow, Marker, Polyline, DirectionsService } from "react-google-maps";
+import { withGoogleMap, GoogleMap, withScriptjs, InfoWindow, Marker, Polyline } from "react-google-maps";
 import Autocomplete from 'react-google-autocomplete';
 import Geocode from "react-geocode";
 import apiConfig from '../../../apiKeys'
 import WeatherApi from '../Weather/WeatherApi'
+import './Map.css'
 
 Geocode.setApiKey(apiConfig.googleMap);
 // import Search from './Search'
@@ -350,18 +351,20 @@ const AsyncMap = withScriptjs(
 let map;
   if( this.props.center.lat !== undefined ) {
    map = <div>
-     <div>
-     <div className="form-group">
+    <div id="form-parent" className="container">
+     <div id="trip-time" className="form-group col-6">
        <label htmlFor="">Trip Time: </label>
        <input type="text" name="trip" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.totalTime }/>
       </div>
-      <div className="form-group">
+      <div className="row">
+      <div id="start-loc" className="form-group col-sm">
        <label htmlFor="">Start Location</label>
        <input type="text" name="start-location" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.address }/>
       </div>
-      <div className="form-group">
+      <div id="end-loc" className="form-group col-sm">
        <label htmlFor="">End Location</label>
        <input type="text" name="end-location" className="form-control" onChange={ this.onChange } readOnly="readOnly" value={ this.state.destAddress }/>
+      </div>
       </div>
      </div>
      <AsyncMap

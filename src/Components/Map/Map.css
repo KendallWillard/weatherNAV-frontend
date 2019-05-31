@@ -1,3 +1,29 @@
 .Map {
     text-align: center;
 }
+
+#trip-time {
+    display: inline-block;
+    justify-content: center;
+    text-align: center;
+}
+
+#start-loc {
+    justify-content: center;
+    text-align: center;
+    
+}
+#end-loc {
+    justify-content: center;
+    text-align: center;
+    
+}
+
+#form-parent {
+
+    text-align: center;
+}
+
+.form-control {
+    text-align: center;
+}

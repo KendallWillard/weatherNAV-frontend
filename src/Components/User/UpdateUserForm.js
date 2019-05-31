@@ -1,25 +1,18 @@
 import React from "react";
 import { MDBContainer, MDBRow, MDBCol, MDBBtn, MDBInput } from 'mdbreact';
 import { Redirect } from 'react-router-dom';
-import UserLoginForm from './UserLoginForm';
 
-
-export default class FormPage extends React.Component {
+export default class UpdateUserForm extends React.Component {
     constructor(props) {
         super(props)
         //first_name and last_name must be undercase to pass backend validation
         this.state = {
             first_name: '',
             last_name: '',
-            phone: '',
+            phone: props.phone,
             username: '',
-            loginStatus: false,
-            loginPage: false
+            loginStatus: false
         }
-    }
-
-    componentDidMount() {
-        // window.localStorage.clear()
     }
 
     handleChange = (event) => {
@@ -28,12 +21,6 @@ export default class FormPage extends React.Component {
             [name]: value
         })
     }
-
-    handleLoginClick = (event) => {
-        event.preventDefault()
-        this.setState({loginPage: true})
-    }
-
     clearState = () => {
         this.setState({
             first_name: '',
@@ -44,35 +31,31 @@ export default class FormPage extends React.Component {
         })
     }
 
-    
     handleSubmit = (event) => {
         event.preventDefault();
-        let currUser = Number(window.localStorage.getItem('userCount'));
-        window.localStorage.setItem(this.state.phone, currUser)
-        window.localStorage.setItem(this.state.username, this.state.phone)
-        currUser = (Number(currUser) + 1 )
-        window.localStorage.setItem('userCount', currUser)
-        this.props.setUsername(this.state.phone)
-        fetch(`http://localhost:3001/users`, {
-            method: 'POST',
+        const user = {
+            first_name: this.state.first_name,
+            last_name: this.state.last_name,
+            phone: this.state.phone,
+            username: this.state.username
+        }
+        
+        let userId = ( Number( window.localStorage.getItem(this.state.phone) ) + 1)
+        fetch(`http://localhost:3001/users/${userId}`, {
+            method: 'PATCH',
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify(this.state)
+            body: JSON.stringify({user})
           })
           .then(this.clearState())
           .catch(error => console.error(error))
-
-        
     }
     
 
     render() {
     if(this.state.loginStatus) {
         return <Redirect to='/map' />
-    }
-    if(this.state.loginPage) {
-        return <Redirect to='/login' />
     }
     return (
         <MDBContainer 
@@ -86,7 +69,7 @@ export default class FormPage extends React.Component {
         <MDBRow>
             <MDBCol md="12">
             <form>
-                <p className="h5 text-center mb-4">Sign up</p>
+                <p className="h5 text-center mb-4">Update Profile</p>
                 <div className="blue-text">
                 <MDBInput
                     label="First Name"
@@ -138,8 +121,7 @@ export default class FormPage extends React.Component {
                 />
                 </div>
                 <div className="text-center">
-                <MDBBtn onClick={this.handleSubmit} color="primary">Register</MDBBtn>
-                <MDBBtn onClick={this.handleLoginClick}>Login</MDBBtn>
+                <MDBBtn onClick={this.handleSubmit} color="primary">Update User</MDBBtn>
                 </div>
             </form>
             </MDBCol>
