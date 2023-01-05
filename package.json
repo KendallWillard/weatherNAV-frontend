@@ -12,7 +12,7 @@
     "react-google-autocomplete": "^1.1.0",
     "react-google-maps": "^9.4.5",
     "react-router-dom": "^5.0.0",
-    "react-scripts": "0.9.5",
+    "react-scripts": "5.0.1",
     "react-sticky": "^6.0.3"
   },
   "devDependencies": {},
